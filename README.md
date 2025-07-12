@@ -28,7 +28,12 @@ Ports accessible locally on host:
 Note:
 Multi-container setup is not necessary. There is no value add to setting up multiple containers, separating the master, workers and drivers because they all use the same hardware from the same host.
 This is because the Sparksession object could still be initialised as such:
-`spark = SparkSession.builder.master('local[4]').getOrCreate()` 
+
+```
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.master('local[4]').getOrCreate()
+```
+
 It was done for fun to play around with the Spark standalone scripts as well as Docker network configuration. There is no practical benefit or rather overhead with the use of multi-container set up.
 Ideal case should have been a network of VMs with isolated hardware resources.
 
