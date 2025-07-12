@@ -1,0 +1,10 @@
+{
+  "name": "Spark Driver Dev",
+  "dockerComposeFile": ["../docker/docker-compose.yaml"],
+  "service": "spark-driver",
+  "workspaceFolder": "/opt/my-workspace",
+  "postCreateCommand": "pip install --no-cache-dir -r requirements.txt",
+  "extensions": [
+    "ms-python.python"
+  ]
+}

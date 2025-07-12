@@ -1,0 +1,65 @@
+name: spark-pipeline
+
+services:
+  spark-master:
+    image: ${SPARK_CLUSTER_IMAGE_NAME}
+    container_name: spark-master
+    entrypoint: [ "./entrypoint.sh", "master" ]
+    env_file: ./.env
+    ports:
+      - "7077:7077"
+      - "9090:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7077"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+    networks:
+      - spark
+    volumes:
+      - spark-events:/tmp/spark-events
+  spark-worker:
+    image: ${SPARK_CLUSTER_IMAGE_NAME}
+    container_name: spark-worker
+    depends_on:
+      - spark-master
+    entrypoint: [ "./entrypoint.sh", "worker" ]
+    env_file: ./.env
+    networks:
+      - spark
+    volumes:
+      - spark-events:/tmp/spark-events
+  spark-history:
+    image: ${SPARK_CLUSTER_IMAGE_NAME}
+    container_name: spark-history
+    depends_on:
+      - spark-master
+    entrypoint: [ "./entrypoint.sh", "history" ]
+    env_file: ./.env
+    ports:
+      - "18080:18080"
+    networks:
+      - spark
+    volumes:
+      - spark-events:/tmp/spark-events
+  spark-driver:
+    image: ${SPARK_JUPYTER_IMAGE_NAME}
+    container_name: spark-driver
+    depends_on:
+      - spark-master
+    env_file: ./.env
+    ports:
+      - "56789:56789"
+      - "8889:8888"
+      - "4040:4040"
+    networks:
+      - spark
+    volumes:
+      - spark-events:/tmp/spark-events
+      - ../:/opt/my-workspace/
+
+networks:
+  spark:
+
+volumes:
+  spark-events:

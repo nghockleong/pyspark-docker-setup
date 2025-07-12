@@ -1,0 +1,44 @@
+FROM openjdk:11-jre-slim
+
+WORKDIR /opt
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        python3 \
+        python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Download Spark tarball
+ARG SPARK_VERSION=3.5.6
+RUN curl -L -o spark-${SPARK_VERSION}-bin-hadoop3.tgz https://dlcdn.apache.org/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop3.tgz && \
+    tar -xzf spark-${SPARK_VERSION}-bin-hadoop3.tgz && \
+    rm spark-${SPARK_VERSION}-bin-hadoop3.tgz
+
+RUN mv spark-${SPARK_VERSION}-bin-hadoop3 spark
+
+# No need to set JAVA_HOME and add Java binary to PATH because the base image already has it
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/sbin:$SPARK_HOME/bin:$PATH
+
+ENV PYSPARK_PYTHON=python3
+ENV SPARK_NO_DAEMONIZE=true
+
+COPY requirements.txt .
+COPY spark-defaults.conf ${SPARK_HOME}/conf/
+
+# Ensure that pyspark and jupyter notebook is minimally installed
+RUN pip install --no-cache-dir -r requirements.txt
+
+RUN mkdir /opt/my-workspace/
+WORKDIR /opt/my-workspace/
+
+# For driver to connect with
+EXPOSE 56789
+# To interact with the jupyter notebook
+EXPOSE 8888
+# To interact with the driver UI
+EXPOSE 4040
+
+CMD ["jupyter-notebook", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root", "--NotebookApp.token=''"]
